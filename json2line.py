@@ -1,8 +1,8 @@
 #!/usr/bin/python26
-import json
 import sys
 import textwrap
 from optparse import OptionParser, make_option
+import json
 
 class Dumper:
   def as_dict(self, v, prefix=[]):
@@ -101,20 +101,25 @@ USAGE=textwrap.dedent("""\
       a.1="b"
   
   Example:
-    curl -s https://api.github.com/gists/public | %prog | grep "aaa.bbb" """)
+    curl -s https://api.github.com/gists/public | %prog | grep "aaa.bbb"
+    
+    aws ec2 describe-instances --filter '{"name":"tag:Name","values":"ft01"}'|./json2line.py --tsv |awk '/InstanceId/{print $2}'
+    """)
 
-def execute(data, options=None):
-  dumper = Dumper()
-  formatter = Formatter()
-  formatter_option = FormatterOption(formatter)
+class Json2Line:
+  def __init__(self,options=None):
+    self.dumper = Dumper()
+    self.formatter = Formatter()
+    self.formatter_option = FormatterOption(self.formatter)
 
-  option_parser = OptionParser(usage=USAGE, option_list=formatter_option.list())
+    option_parser = OptionParser(usage=USAGE, option_list=self.formatter_option.list())
 
-  (options, args) = option_parser.parse_args(options)
-  formatter_option.apply(options)
+    (self.options, args) = option_parser.parse_args(options)
+    self.formatter_option.apply(self.options)
 
-  for k,v in dumper.apply(data):
-    yield formatter.format(k,v)
+  def apply(self, data):
+    for k,v in self.dumper.apply(data):
+      yield self.formatter.format(k,v)
 
 def to_str(data, options=None):
   """
@@ -148,18 +153,9 @@ def to_str(data, options=None):
   a.b.0-2
   a.b.1-"1"
   """
-  return "\n".join([i for i in execute(data,options)])
+  return "\n".join([i for i in Json2Line(options).apply(data)])
 
 if __name__ == '__main__':
-  import select
-  rlist, wlist, xlist = select.select([sys.stdin],[],[],0)
-  if not rlist:
-    data = None
-    options = ["--help"]
-  else:
-    data = json.load(sys.stdin)
-    options = None
-
-  for l in execute(data,options):
+  for l in Json2Line().apply(json.load(sys.stdin)):
     print l
 

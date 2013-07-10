@@ -6,7 +6,10 @@ Usage: json2line.py [options]
     a.1="b"
 
 Example:
-  curl -s https://api.github.com/gists/public | json2line.py | grep "aaa.bbb" 
+  curl -s https://api.github.com/gists/public | json2line.py | grep "aaa.bbb"
+
+  aws ec2 describe-instances --filter '{"name":"tag:Name","values":"ft01"}'|./json2line.py --tsv |awk '/InstanceId/{print $2}'
+
 
 Options:
   -s SEP, --sep=SEP  separator of key hierarchy. default '.'
