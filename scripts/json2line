@@ -1,0 +1,7 @@
+#!/bin/env python
+import json
+import sys
+from json2line import Json2Line
+
+for l in Json2Line().apply(json.load(sys.stdin)):
+    print l
